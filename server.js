@@ -14,6 +14,9 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+
+
+
 // ✅ Route to send PIR Motion Detected email
 app.get('/send-message', async (req, res) => {
     const { email } = req.query;
@@ -101,6 +104,45 @@ app.post('/send-ip', async (req, res) => {
     }
 });
 
+// ✅ Route to send Fire Alert email
+app.get('/send-fire-alert', async (req, res) => {
+    const { email } = req.query;
+    const timestamp = new Date().toLocaleString();
+
+    if (!email) {
+        return res.status(400).send('❌ Missing required query parameter: email.');
+    }
+
+    // 🔥 Fire Alert Email Template
+    const emailContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #ff9800, #ff5722); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); text-align: center;">
+            <h1 style="color: #b71c1c; margin-bottom: 20px;">🔥 Fire Alert Detected!</h1>
+            <p style="font-size: 18px; color: #fff;">
+                Warning! A fire has been detected in the monitored area.
+            </p>
+            <div style="margin: 20px auto; padding: 10px; background: #d32f2f; color: white; border-radius: 5px; font-size: 16px; font-weight: bold;">
+                📅 Detected on: ${timestamp}
+            </div>
+            <p style="font-size: 14px; color: #fff;">This is an automated emergency alert from your Fire Detection System.</p>
+        </div>
+    `;
+
+    const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: email,
+        subject: '🔥 Fire Alert Detected!',
+        html: emailContent,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ Fire alert email sent to ${email} at ${timestamp}`);
+        res.send(`✅ Fire alert email sent successfully to ${email}.`);
+    } catch (error) {
+        console.error('❌ Error sending Fire Alert email:', error);
+        res.status(500).send('❌ Failed to send Fire Alert email.');
+    }
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;
